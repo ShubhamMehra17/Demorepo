@@ -20,6 +20,7 @@ public class App {
             System.out.println("1. For Admin ");
             System.out.println("2. For User ");
             System.out.println("3. For Exit ");
+            System.out.print("Enter Your Choice : ");
             int choice = Integer.parseInt(in.nextLine());
 
             if(choice==2){
