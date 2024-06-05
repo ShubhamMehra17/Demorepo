@@ -3,6 +3,7 @@ import java.sql.*;
 import java.util.Random;
 import java.util.Scanner;
 
+import static org.example.Dao.PassengerDao.operations.updatingSeatNo;
 import static org.example.Utility.getConnection;
 
 public class TicketDao {
@@ -109,6 +110,8 @@ public class TicketDao {
                             preparedStatement2.setDate(2,bookingDate);
                             preparedStatement2.setInt(3,busRoute);
                             int busCapacityUpdated = preparedStatement2.executeUpdate();
+
+                        updatingSeatNo(ticketId);
                         System.out.println("Ticket Is Cancelled Successfully For Ticket No : " + ticketId);
                     } else {
                         System.out.println("Failed To Cancle Your Ticket");

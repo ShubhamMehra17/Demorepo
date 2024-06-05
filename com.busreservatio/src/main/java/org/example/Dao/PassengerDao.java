@@ -79,91 +79,113 @@ public class PassengerDao {
             int passengerAge = Integer.parseInt(in.nextLine());
             System.out.print("Enter Your Contact No : ");
             String passengerContact = in.nextLine().trim();
-
-            System.out.println("Enter Your Booking Date : dd/MM/yyyy");
-            String dateStr = in.nextLine();
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-            LocalDate pDateOfBooking = LocalDate.parse(dateStr, formatter);
-            Date sqlDate = Date.valueOf(pDateOfBooking);
-
             LocalDateTime datebooked = LocalDateTime.now();
             Timestamp timestamp = Timestamp.valueOf(datebooked);
 
-
-            printSeats(sqlDate, busRoute);
-            int seatNo = 0;
-
+            String dateStr = null;
+            DateTimeFormatter formatter;
+            LocalDate pDateOfBooking;
+            Date sqlDate;
             while (true) {
-                System.out.print("Please Select A Seat No : ");
-                seatNo = in.nextInt();
+                System.out.println("Enter Your Booking Date : dd/MM/yyyy");
+                dateStr = in.nextLine();
+                formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+                pDateOfBooking = LocalDate.parse(dateStr, formatter);
+                sqlDate = Date.valueOf(pDateOfBooking);
 
+                LocalDate localDate = LocalDate.now();
 
-                while (seatNo > 30 || seatNo <= 0) {
-                    System.out.println("Please Enter A Valid Seat No. ");
-                    seatNo = in.nextInt();
-                }
-
-                PreparedStatement preparedStatement = connection.prepareStatement("select * from passengersdata where SEAT_NO=? And Bus_Route = ? And PASSENGER_DATEOFBOOKING=?");
-                preparedStatement.setInt(1, seatNo);
-                preparedStatement.setInt(2, busRoute);
-                preparedStatement.setDate(3, sqlDate);
-
-                ResultSet resultSet = preparedStatement.executeQuery();
-                if (!resultSet.next()) {
+                if (pDateOfBooking.isAfter(localDate)) {
 
                     break;
+                } else {
+
+                    System.out.println("Please Enter Date A Valid Date : dd/MM/yyyy");
+
+                    dateStr = in.nextLine();
+                    formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+                    pDateOfBooking = LocalDate.parse(dateStr, formatter);
                 }
 
             }
 
-            updatingInBusRecord(sqlDate, busRoute,connection);
 
-            int ticketno = generateTicket(busRoute, connection);
+                printSeats(sqlDate, busRoute);
+                int seatNo = 0;
 
-            PreparedStatement savingpasssenger = connection.prepareStatement("INSERT INTO PASSENGERSDATA( PASSENGER_NAME, PASSENGER_EMAIL,PASSENGER_AGE, PASSENGER_CONTACT,PASSENGER_DATEOFBOOKING, PASSENGER_DATEBOOKED,TICKET_ID,SEAT_NO,Bus_Route) VALUES" +
-                    "(? ,? ,? ,? ,? , ?, ?,?,?) ");
-            savingpasssenger.setString(1, passengerName);
-            savingpasssenger.setString(2, passengerEmail);
-            savingpasssenger.setInt(3, passengerAge);
-            savingpasssenger.setString(4, passengerContact);
-            savingpasssenger.setDate(5, sqlDate);
-            savingpasssenger.setTimestamp(6, timestamp);
-            savingpasssenger.setInt(8, seatNo);
-            savingpasssenger.setInt(9, busRoute);
+                while (true) {
+                    System.out.print("Please Select A Seat No : ");
+                    seatNo = in.nextInt();
 
+                    boolean checkingseats = checkingseatno(seatNo,busRoute);
 
-            PreparedStatement ticketIdFetching = connection.prepareStatement("select * from tickets where TICKET_NO = ?");
-            ticketIdFetching.setInt(1, ticketno);
-            ResultSet rst1 = ticketIdFetching.executeQuery();
-            int ticketId = 0;
-            while (rst1.next()) {
-                ticketId = rst1.getInt("ticket_id");
-            }
-
-            if (ticketno != 0) {
-                savingpasssenger.setInt(7, ticketId);
-                int passengersaved = savingpasssenger.executeUpdate();
-
-                System.out.print("Please Wait");
-                try {
-                    for (int i = 0; i < 3; i++) {
-                        Thread.sleep(500);
-                        System.out.print(".");
+                    while (checkingseats==false ) {
+                        System.out.println("Please Enter A Valid Seat No. ");
+                        seatNo = in.nextInt();
+                        checkingseats=checkingseatno(seatNo,busRoute);
                     }
-                } catch (Exception e) {
-                    e.getMessage();
+
+                    PreparedStatement preparedStatement = connection.prepareStatement("select * from passengersdata where SEAT_NO=? And Bus_Route = ? And PASSENGER_DATEOFBOOKING=?");
+                    preparedStatement.setInt(1, seatNo);
+                    preparedStatement.setInt(2, busRoute);
+                    preparedStatement.setDate(3, sqlDate);
+
+                    ResultSet resultSet = preparedStatement.executeQuery();
+                    if (!resultSet.next()) {
+
+                        break;
+                    }
+
                 }
 
+                updatingInBusRecord(sqlDate, busRoute, connection);
 
-                System.out.println();
-                System.out.println("============== Booking Confirmed On Date : " + pDateOfBooking + " =============");
-                System.out.println("==================== Your Ticket Id : " + ticketId + " ===================");
-                System.out.println("========================== Happy Journey ==========================");
-                System.out.println("===================================================================");
-            } else {
-                System.out.println("Booking failed...");
+                int ticketno = generateTicket(busRoute, connection);
+
+                PreparedStatement savingpasssenger = connection.prepareStatement("INSERT INTO PASSENGERSDATA( PASSENGER_NAME, PASSENGER_EMAIL,PASSENGER_AGE, PASSENGER_CONTACT,PASSENGER_DATEOFBOOKING, PASSENGER_DATEBOOKED,TICKET_ID,SEAT_NO,Bus_Route) VALUES" +
+                        "(? ,? ,? ,? ,? , ?, ?,?,?) ");
+                savingpasssenger.setString(1, passengerName);
+                savingpasssenger.setString(2, passengerEmail);
+                savingpasssenger.setInt(3, passengerAge);
+                savingpasssenger.setString(4, passengerContact);
+                savingpasssenger.setDate(5, sqlDate);
+                savingpasssenger.setTimestamp(6, timestamp);
+                savingpasssenger.setInt(8, seatNo);
+                savingpasssenger.setInt(9, busRoute);
+
+
+                PreparedStatement ticketIdFetching = connection.prepareStatement("select * from tickets where TICKET_NO = ?");
+                ticketIdFetching.setInt(1, ticketno);
+                ResultSet rst1 = ticketIdFetching.executeQuery();
+                int ticketId = 0;
+                while (rst1.next()) {
+                    ticketId = rst1.getInt("ticket_id");
+                }
+
+                if (ticketno != 0) {
+                    savingpasssenger.setInt(7, ticketId);
+                    int passengersaved = savingpasssenger.executeUpdate();
+
+                    System.out.print("Please Wait");
+                    try {
+                        for (int i = 0; i < 3; i++) {
+                            Thread.sleep(500);
+                            System.out.print(".");
+                        }
+                    } catch (Exception e) {
+                        e.getMessage();
+                    }
+
+
+                    System.out.println();
+                    System.out.println("============== Booking Confirmed On Date : " + pDateOfBooking + " =============");
+                    System.out.println("==================== Your Ticket Id : " + ticketId + " ===================");
+                    System.out.println("========================== Happy Journey ==========================");
+                    System.out.println("===================================================================");
+                } else {
+                    System.out.println("Booking failed...");
+                }
             }
-        }
 
 
         public static void showBus() throws SQLException {
@@ -231,7 +253,10 @@ public class PassengerDao {
             }
 
             System.out.println();
+
+
             System.out.println("Booked Seats : ");
+
             try {
 
                 PreparedStatement preparedStatement = connection.prepareStatement("Select SEAT_NO FROM PASSENGERSDATA  WHERE PASSENGER_DATEOFBOOKING=? and  Bus_Route=?");
@@ -245,6 +270,7 @@ public class PassengerDao {
                 while (resultSet.next()) {
 
                     int bookedSeats = resultSet.getInt("SEAT_NO");
+                    if(bookedSeats>0) {
                     if (count == 10) {
                         System.out.println();
                     }
@@ -252,7 +278,9 @@ public class PassengerDao {
                         System.out.println();
                     }
                     count++;
-                    System.out.print(bookedSeats + " ");
+
+                        System.out.print(bookedSeats + " ");
+                    }
 
                 }
                 System.out.println();
@@ -262,6 +290,42 @@ public class PassengerDao {
             }
 
         }
+
+        public static void updatingSeatNo(int tid){
+            int id  = tid;
+            try {
+                PreparedStatement preparedStatement =connection.prepareStatement("UPDATE PASSENGERSDATA SET SEAT_NO = 0 WHERE TICKET_ID=?");
+                preparedStatement.setInt(1,id);
+
+                preparedStatement.executeUpdate();
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+
+        public static boolean checkingseatno(int seatno, int route){
+            try {
+            int seatNo = seatno;
+            int busRoute = route;
+
+            PreparedStatement preparedStatement1 = connection.prepareStatement("Select * from buses where BUSROUTE=?");
+                preparedStatement1.setInt(1,busRoute);
+
+                ResultSet rst = preparedStatement1.executeQuery();
+                while (rst.next()) {
+                   int seat = rst.getInt("BUS_CAPACITY");
+
+                    if (seatNo <= seat && seatNo>0) {
+                        return true;
+                    }
+                }
+            return false;
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+    }
+
 
     }
 }
