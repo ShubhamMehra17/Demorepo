@@ -3,6 +3,7 @@ import java.sql.*;
 import java.util.Random;
 import java.util.Scanner;
 
+import static org.example.Dao.PassengerDao.operations.updatingSeatNo;
 import static org.example.Utility.getConnection;
 
 public class TicketDao {
@@ -71,14 +72,17 @@ public class TicketDao {
 
 
         try {
-            PreparedStatement preparedStatement1 = connection.prepareStatement("Select * from tickets where ticket_id=?");
+            PreparedStatement preparedStatement1 = connection.prepareStatement("SELECT * FROM tickets t, passengersdata p WHERE t.TICKET_ID = p.TICKET_ID AND t.TICKET_ID = ?");
             preparedStatement1.setInt(1, ticketId);
             ResultSet rst = preparedStatement1.executeQuery();
 
             boolean ticketCheck;
+            Date bookingDate = null;
+            int busRoute=0;
             while (rst.next()) {
                 ticketCheck = rst.getBoolean("TICKET_STATUS");
-
+                bookingDate=rst.getDate("PASSENGER_DATEOFBOOKING");
+                busRoute = rst.getInt("BUS_ROUTE");
                 if (ticketCheck == true) {
 
 
@@ -87,6 +91,27 @@ public class TicketDao {
                     int cancledTicket = preparedStatement.executeUpdate();
 
                     if (cancledTicket > 0) {
+                        PreparedStatement preparedStatement3 = connection.prepareStatement("select * from busesdata where DEPARTURE_DATE=? and BUS_ROUTE=? ");
+                        preparedStatement3.setDate(1,bookingDate);
+                        preparedStatement3.setInt(2,busRoute);
+                        ResultSet rst3 = preparedStatement3.executeQuery();
+                        int availableCapacity = 0;
+                        while (rst3.next()){
+                            availableCapacity= rst3.getInt("BUS_AVAILABLECAPACITY");
+                        }
+
+
+
+                        int forupdatingInBusData = availableCapacity+1;
+
+
+                        PreparedStatement preparedStatement2 = connection.prepareStatement("Update Busesdata set BUS_AVAILABLECAPACITY=? where DEPARTURE_DATE=? and BUS_ROUTE=? ");
+                            preparedStatement2.setInt(1,forupdatingInBusData);
+                            preparedStatement2.setDate(2,bookingDate);
+                            preparedStatement2.setInt(3,busRoute);
+                            int busCapacityUpdated = preparedStatement2.executeUpdate();
+
+                        updatingSeatNo(ticketId);
                         System.out.println("Ticket Is Cancelled Successfully For Ticket No : " + ticketId);
                     } else {
                         System.out.println("Failed To Cancle Your Ticket");

@@ -53,7 +53,15 @@ public class BusDao {
 
                     System.out.print("Enter Seating Capacity : ");
                     int seatingCapacity = in.nextInt();
-
+                    System.out.println("Please Wait");
+                    try {
+                        for (int i = 0; i < 3; i++) {
+                            Thread.sleep(500);
+                            System.out.print(".");
+                        }
+                    } catch (Exception e) {
+                        e.getMessage();
+                    }
 
                     PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO BUSES ( BUSNO, BUSROUTE, BUS_SOURCE, BUS_DESTINATION, BUS_TIME, BUS_CAPACITY, TICKET_PRICE)" +
                             "VALUES (?,?,?,?,?,?,?)");

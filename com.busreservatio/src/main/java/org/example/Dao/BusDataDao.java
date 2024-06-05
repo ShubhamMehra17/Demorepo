@@ -14,13 +14,14 @@ public class BusDataDao {
             preparedStatement.setInt(1, busRoute);
             ResultSet rst = preparedStatement.executeQuery();
             int busCapacity = 0;
+
             Time busTime = null;
             while(rst.next()){
                 busCapacity =rst.getInt("BUS_CAPACITY");
                 busTime = rst.getTime("BUS_TIME");
             }
 
-
+            int busreducedCapacity = busCapacity-1;
             PreparedStatement preparedStatement2 = connection.prepareStatement("Select * FROM BUSESDATA WHERE DEPARTURE_DATE=? AND BUS_ROUTE=?");
             preparedStatement2.setDate(1,date);
             preparedStatement2.setInt(2,busRoute);
@@ -30,7 +31,7 @@ public class BusDataDao {
                         "(?,?,?,?,?)");
                 preparedStatement1.setInt(1,busRoute);
                 preparedStatement1.setInt(2,busCapacity);
-                preparedStatement1.setInt(3,busCapacity);
+                preparedStatement1.setInt(3,busreducedCapacity);
                 preparedStatement1.setTime(4,busTime);
                 preparedStatement1.setDate(5,date);
 
